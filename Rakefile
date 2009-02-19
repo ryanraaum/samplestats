@@ -306,16 +306,49 @@ namespace :test do
     assert_passes { val[1] =~ /[0-9]+/ }
     assert_passes { val[1].to_i >= 0 }
     puts "-s (number of singletons)".ljust(40) + "OK"
-    puts "SUCCESS."
     
     assert_passes do
-      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG2} -s < big_theta_ms_output > ss2_out", :verbose => false
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG2} -N < big_theta_ms_output > ss2_out", :verbose => false
     end
     val = (File.open("ss2_out", "r") { |infile| infile.gets }).split(' ')
-    assert_equal( "num_singletons:", val[0] )
+    assert_equal( "nss:", val[0] )
     assert_passes { val[1] =~ /[0-9]+/ }
     assert_passes { val[1].to_i >= 0 }
-    puts "-s (number of singletons)".ljust(40) + "OK"
+    puts "-N (number of singleton sites)".ljust(40) + "OK"
+
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG2} -f < big_theta_ms_output > ss2_out", :verbose => false
+    end
+    val = (File.open("ss2_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "hf:", val[0] )
+    assert_passes { val[1] =~ /-?[0-9]+\.[0-9]+/ }
+    puts "-f (mean haplotype frequency)".ljust(40) + "OK"
+
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG2} -i < big_theta_ms_output > ss2_out", :verbose => false
+    end
+    val = (File.open("ss2_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "ih:", val[0] )
+    assert_passes { val[1] =~ /[0-9]+/ }
+    assert_passes { val[1].to_i >= 0 }
+    puts "-i (max number of identical haplotypes)".ljust(40) + "OK"
+
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG2} -R < big_theta_ms_output > ss2_out", :verbose => false
+    end
+    val = (File.open("ss2_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "r2:", val[0] )
+    assert_passes { val[1] =~ /-?[0-9]+\.[0-9]+/ }
+    puts "-R (Ramos-Onsins and Rozas' R2)".ljust(40) + "OK"
+
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG2} -U < big_theta_ms_output > ss2_out", :verbose => false
+    end
+    val = (File.open("ss2_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "Fs:", val[0] )
+    assert_passes { val[1] =~ /-?[0-9]+\.[0-9]+/ }
+    puts "-U (Fu's Fs)".ljust(40) + "OK"
+
     puts "SUCCESS."
   end
   

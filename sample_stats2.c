@@ -290,30 +290,6 @@ int max_identical_haplotypes(int nsam, int* hap_freqs) {
     return (max_num);
 }
 
-/*  The average number of samples per haplotypes
- *
- *      nsam            - total number of samples in data list
- *      hap_freqs       - an array with counts per haplotype
- *                         (each entry corresponds to a row in the
- *                          original data; all entries should have 
- *                          an integer value; a value of -9 indicates 
- *                          that the entry at that row has already been
- *                          counted)
- *
- *  Returns an double
- */
-double mean_haplotype_frequency(int nsam, int* hap_freqs) {
-    double nh,        /* number of haplotypes as double */
-           dsam,      /* number of samples as double */
-           result;    /* result of calculation to return */
-
-    nh = num_haplotypes(nsam, hap_freqs);
-    dsam = nsam;
-    result = dsam/nh;
-
-    return (result);
-}
-
 /*  Count the total number of singletons (haplotypes with only
  *    one occurence.
  *
@@ -422,7 +398,12 @@ static void print_help (void) {
     -D        D:      Tajima's D\n\
     -H        ho:     Homozygosity\n\
     -n        nh:     number of haplotypes\n\
-    -s        ns:     number of singletons\n", stdout);
+    -s        ns:     number of singletons\n\
+    -N        nss:    number of singleton sites\n\
+    -f        hf:     mean haplotype frequency\n\
+    -i        ih:     max number identical haplotypes\n\
+    -R        R2:     Ramos-Onsins & Rozas' R2\n\
+    -U        Fs:     Fu's Fs\n", stdout);
 
   puts ("");
   fputs ("\
@@ -706,7 +687,7 @@ int main(int argc, char *argv[]) {
         }
 
         /* count up the haplotype frequencies if we are going to use them */
-        if (nh_flag || ns_flag || ho_flag || fs_flag || r2_flag ) {
+        if (nh_flag || ns_flag || ho_flag || hf_flag || fs_flag || r2_flag ) {
             count_haplotype_frequencies(nsam, segsites, list, hap_frequencies);
         }
 
@@ -719,7 +700,7 @@ int main(int argc, char *argv[]) {
             th = theta_h(nsam, segsites, site_frequencies);
 
         /* calculate the number of haplotypes if necessary */
-        if (nh_flag || fs_flag)
+        if (nh_flag || hf_flag || fs_flag)
             nh = num_haplotypes(nsam, hap_frequencies);
     
         if ( pi_flag )
@@ -745,14 +726,14 @@ int main(int argc, char *argv[]) {
         if ( nss_flag )
             printf("nss:\t%d\t", num_singleton_sites(segsites, site_frequencies));
         if ( hf_flag )
-            printf("hf:\t%lf\t", mean_haplotype_frequency(nsam, hap_frequencies));
+            printf("hf:\t%lf\t", (double)nsam/(double)nh);
         if ( ih_flag )
             printf("ih:\t%d\t", max_identical_haplotypes(nsam, hap_frequencies));
         if ( r2_flag )
             printf("r2:\t%lf\t", R2(unic_frequencies, pi, nsam, segsites));
         if ( fs_flag )
             printf("Fs:\t%lf\t", Fs(nsam, pi, nh));
-        printf("%s", slashline);
+        printf("%s\n", slashline);
        
     }
     
