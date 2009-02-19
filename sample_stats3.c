@@ -297,6 +297,34 @@ int num_singletons(int nsam, int* hap_freqs) {
     return (count);
 }
 
+/*  Count the total number of singleton sites in the data.
+ *    This is the number of variant sites appearing once
+ *    and only once in the entire dataset.
+ *
+ *      segsites        - total number of segregating sites 
+ *                        ( length of positions array )
+ *      site_freqs      - array with counts of '1' per site 
+ *
+ *  Returns an integer
+ */
+int num_singleton_sites(int nsites, int **site_freqs) {
+    int     i,j,                /* iterators */
+            count;              /* running total */
+
+    count = 0;
+
+    for( i = 0; i < nsites; i++) {
+        /* calculate site frequency of '1' */
+        for( j = 0; j < 4; j++ ) {
+            if (site_freqs[i][j] == 1) {
+                count++;
+            }
+        }
+    }
+    
+    return (count);
+}
+
 /*  Calculate homozygosity.  This is done by summing up the squares
  *    of haplotype proportions.
  *
@@ -349,7 +377,8 @@ static void print_help (void) {
     -D        D:      Tajima's D\n\
     -H        ho:     Homozygosity\n\
     -n        nh:     number of haplotypes\n\
-    -s        ns:     number of singletons\n", stdout);
+    -s        ns:     number of singletons\n\
+    -N        nss:    number of singleton sites\n", stdout);
 
   puts ("");
   fputs ("\
@@ -411,6 +440,7 @@ int main(int argc, char *argv[]) {
             nh_flag,            /* 0 or 1; output the number of haplotypes */
             ns_flag,            /* 0 or 1; output the number of singleton haplotypes */
             ho_flag,            /* 0 or 1; output homozygosity */
+            nss_flag,           /* 0 or 1; output the number of singleton sites */
             td_flag;            /* 0 or 1; output Tajima's D */
     
     char    ch;                 /* current character iterator for getopt option parsing */
@@ -429,6 +459,7 @@ int main(int argc, char *argv[]) {
     nh_flag = 0;
     ns_flag = 0;
     ho_flag = 0;
+    nss_flag= 0;
     td_flag = 1;
 
     /* However, if there are command line options, zero out all flags and
@@ -447,7 +478,7 @@ int main(int argc, char *argv[]) {
      *      H - Homozygosity
      *      n - number of haplotypes
      *      s - number of singletons */
-    while ((ch = getopt(argc, argv, "SpWDHnshv")) != -1) {
+    while ((ch = getopt(argc, argv, "SpWDHnshvN")) != -1) {
         switch (ch) {
 	        case 'S':
 		        ss_flag = 1;
@@ -469,6 +500,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'D':
                 td_flag = 1;
+                break;
+            case 'N':
+                nss_flag = 1;
                 break;
             case 'h':
                 print_help();
@@ -530,7 +564,7 @@ int main(int argc, char *argv[]) {
 
         /* only perform calculations we need to */
         
-        if ( pi_flag || td_flag || tw_flag || ss_flag ) 
+        if ( pi_flag || td_flag || tw_flag || ss_flag || nss_flag ) 
             calculate_site_frequencies( nsam, nsites, list, site_frequencies );
 
         if (nh_flag || ns_flag || ho_flag) 
@@ -556,6 +590,8 @@ int main(int argc, char *argv[]) {
             printf("num_singletons:\t%d\t", num_singletons(nsam, hap_frequencies));
         if ( ho_flag )
             printf("homozygosity:\t%lf\t", homozygosity(nsam, hap_frequencies));
+        if ( nss_flag )
+            printf("nss:\t%d\t", num_singleton_sites(nsites, site_frequencies));
         puts("");
 
         /* see if there's another replicate coming, check the number of samples

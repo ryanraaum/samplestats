@@ -48,6 +48,7 @@ TESTFILES             = [ "small_theta_ms_output",
                           "big_theta_sample_stats_output",
                           "big_theta_sample_stats2_output",
                           "ss2_out",
+                          "ss3_out",
                           "opttestout",
                           "treefile",
                           "onesmallseqgen", 
@@ -379,6 +380,139 @@ namespace :test do
   end
   
   #
+  # Make sure that sample_stats3 flags all work and produce output whose
+  # format matches what is expected
+  #
+  desc "test sample_stats2 flags"
+  task :ss3f => [SAMPLESTATSPROG3, "onebigseqgen"] do
+    puts ""
+    puts "Running tests of sample_stats3 flags."
+    
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -S < onebigseqgen > ss3_out", :verbose => false
+    end
+    val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "ss:", val[0] )
+    assert_passes { val[1] =~ /[0-9]+/ }
+    assert_passes { val[1].to_i >= 0 }
+    puts "-S (Segregating Sites)".ljust(40) + "OK"
+    
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -p < onebigseqgen > ss3_out", :verbose => false
+    end
+    val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "pi:", val[0] )
+    assert_passes { val[1] =~ /[0-9]+\.[0-9]+/ }
+    assert_passes { val[1].to_f >= 0.0 }
+    puts "-p (pi, nucleotide diversity)".ljust(40) + "OK"
+    
+   # assert_passes do
+   #   sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -F < onebigseqgen > ss3_out", :verbose => false
+   # end
+   # val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+   # assert_equal( "thetaH:", val[0] )
+   # assert_passes { val[1] =~ /[0-9]+\.[0-9]+/ }
+   # assert_passes { val[1].to_f >= 0.0 }
+   # puts "-F (Fay's H)".ljust(40) + "OK"
+
+   # assert_passes do
+   #   sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -d < onebigseqgen > ss3_out", :verbose => false
+   # end
+   # val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+   # assert_equal( "H:", val[0] )
+   # assert_passes { val[1] =~ /-?[0-9]+\.[0-9]+/ }
+   # puts "-d (H = pi - Fay's H)".ljust(40) + "OK"
+    
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -W < onebigseqgen > ss3_out", :verbose => false
+    end
+    val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "thetaW:", val[0] )
+    assert_passes { val[1] =~ /[0-9]+\.[0-9]+/ }
+    assert_passes { val[1].to_f >= 0.0 }
+    puts "-W (Watterson's theta)".ljust(40) + "OK"
+    
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -D < onebigseqgen > ss3_out", :verbose => false
+    end
+    val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "D:", val[0] )
+    assert_passes { val[1] =~ /-?[0-9]+\.[0-9]+/ }
+    puts "-D (Tajima's D)".ljust(40) + "OK"
+    
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -H < onebigseqgen > ss3_out", :verbose => false
+    end
+    val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "homozygosity:", val[0] )
+    assert_passes { val[1] =~ /[0-9]+\.[0-9]+/ }
+    assert_passes { val[1].to_f <= 1.0 and val[1].to_f >= 0.0 }
+    puts "-H (homozygosity)".ljust(40) + "OK"
+    
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -n < onebigseqgen > ss3_out", :verbose => false
+    end
+    val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "num_haplotypes:", val[0] )
+    assert_passes { val[1] =~ /[0-9]+/ }
+    assert_passes { val[1].to_i >= 0 }
+    puts "-n (number of haplotypes)".ljust(40) + "OK"
+    
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -s < onebigseqgen > ss3_out", :verbose => false
+    end
+    val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "num_singletons:", val[0] )
+    assert_passes { val[1] =~ /[0-9]+/ }
+    assert_passes { val[1].to_i >= 0 }
+    puts "-s (number of singletons)".ljust(40) + "OK"
+    
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -N < onebigseqgen > ss3_out", :verbose => false
+    end
+    val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "nss:", val[0] )
+    assert_passes { val[1] =~ /[0-9]+/ }
+    assert_passes { val[1].to_i >= 0 }
+    puts "-N (number of singleton sites)".ljust(40) + "OK"
+
+   # assert_passes do
+   #   sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -f < onebigseqgen > ss3_out", :verbose => false
+   # end
+   # val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+   # assert_equal( "hf:", val[0] )
+   # assert_passes { val[1] =~ /-?[0-9]+\.[0-9]+/ }
+   # puts "-f (mean haplotype frequency)".ljust(40) + "OK"
+
+   # assert_passes do
+   #   sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -i < onebigseqgen > ss3_out", :verbose => false
+   # end
+   # val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+   # assert_equal( "ih:", val[0] )
+   # assert_passes { val[1] =~ /[0-9]+/ }
+   # assert_passes { val[1].to_i >= 0 }
+   # puts "-i (max number of identical haplotypes)".ljust(40) + "OK"
+
+   # assert_passes do
+   #   sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -R < onebigseqgen > ss3_out", :verbose => false
+   # end
+   # val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+   # assert_equal( "r2:", val[0] )
+   # assert_passes { val[1] =~ /-?[0-9]+\.[0-9]+/ }
+   # puts "-R (Ramos-Onsins and Rozas' R2)".ljust(40) + "OK"
+
+   # assert_passes do
+   #   sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -U < onebigseqgen > ss3_out", :verbose => false
+   # end
+   # val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+   # assert_equal( "Fs:", val[0] )
+   # assert_passes { val[1] =~ /-?[0-9]+\.[0-9]+/ }
+   # puts "-U (Fu's Fs)".ljust(40) + "OK"
+
+    puts "SUCCESS."
+  end
+  
+  #
   # Make sure that simple_getopt works, catching options properly and throwing errors when expected
   #
   desc "test simple getopt"
@@ -443,5 +577,5 @@ namespace :test do
   task :ss2 => [:ss2vss, :ss2f]
 
   desc "Run all sample_stats3 tests"
-  task :ss3 => [:ss3read]
+  task :ss3 => [:ss3read, :ss3f]
 end
