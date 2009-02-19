@@ -430,7 +430,8 @@ int main(int argc, char *argv[]) {
                                  *   to sites and 4 columns, indexed in the normal
                                  *   C-style ( 0, 1, 2, 3 ) corresponding to
                                  *   'A', 'G', 'C', 'T' respectively. */
-            *hap_frequencies;   /* array holding unique haplotypes counts */
+            *hap_frequencies,   /* array holding unique haplotypes counts */
+            *unic_frequencies;  /* array holding count of unique sites per sequence */
 
     int     ss_flag,            /* 0 or 1; output the number of segregating sites */
             pi_flag,            /* 0 or 1; output nucleotide diversity */
@@ -439,7 +440,8 @@ int main(int argc, char *argv[]) {
             ns_flag,            /* 0 or 1; output the number of singleton haplotypes */
             ho_flag,            /* 0 or 1; output homozygosity */
             nss_flag,           /* 0 or 1; output the number of singleton sites */
-            td_flag;            /* 0 or 1; output Tajima's D */
+            td_flag,            /* 0 or 1; output Tajima's D */
+            r2_flag;            /* 0 or 1; output Romas-Onsins & Rozas' R2 */
     
     char    ch;                 /* current character iterator for getopt option parsing */
 
@@ -459,6 +461,7 @@ int main(int argc, char *argv[]) {
     ho_flag = 0;
     nss_flag= 0;
     td_flag = 1;
+    r2_flag = 0;
 
     /* However, if there are command line options, zero out all flags and
      * print only those specified in the options */
@@ -475,8 +478,11 @@ int main(int argc, char *argv[]) {
      *      D - Tajima's D
      *      H - Homozygosity
      *      n - number of haplotypes
-     *      s - number of singletons */
-    while ((ch = getopt(argc, argv, "SpWDHnshvN")) != -1) {
+     *      s - number of singletons
+     *      N - number of singleton sites
+     *      R - Ramos-Onsins & Rozas' R2
+     *      */
+    while ((ch = getopt(argc, argv, "SpWDHnshvNR")) != -1) {
         switch (ch) {
 	        case 'S':
 		        ss_flag = 1;
@@ -501,6 +507,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'N':
                 nss_flag = 1;
+                break;
+            case 'R':
+                r2_flag = 1;
                 break;
             case 'h':
                 print_help();
@@ -544,6 +553,9 @@ int main(int argc, char *argv[]) {
     /* allocate enough space for the number of samples in the data */
     hap_frequencies = (int *)malloc( nsam*sizeof( int ));
 
+    /* allocate enough space for the number of samples in the data */
+    unic_frequencies = (int *)malloc( nsam*sizeof( int ));
+
     /* repeat while we still find data (see the end of the loop) */
     while( nsam > 0 && segsites > 0 ) {
         
@@ -562,13 +574,17 @@ int main(int argc, char *argv[]) {
 
         /* only perform calculations we need to */
         
-        if ( pi_flag || td_flag || tw_flag || ss_flag || nss_flag ) 
+        if ( pi_flag || td_flag || tw_flag || ss_flag || nss_flag || r2_flag) 
             calculate_site_frequencies( nsam, segsites, list, site_frequencies );
 
-        if (nh_flag || ns_flag || ho_flag) 
+        if (nh_flag || ns_flag || ho_flag || r2_flag) 
             count_haplotype_frequencies(nsam, segsites, list, hap_frequencies);
         
-        if ( pi_flag || td_flag ) 
+        /* fill in the unic_frequencies array if necessary */
+        if (r2_flag)
+            count_agct_unic_frequencies(nsam, segsites, list, site_frequencies, unic_frequencies);
+
+        if ( pi_flag || td_flag || r2_flag) 
             pi = theta_pi( nsam, segsites, site_frequencies );
 
         if ( ss_flag || tw_flag ) 
@@ -590,6 +606,8 @@ int main(int argc, char *argv[]) {
             printf("homozygosity:\t%lf\t", homozygosity(nsam, hap_frequencies));
         if ( nss_flag )
             printf("nss:\t%d\t", num_singleton_sites(segsites, site_frequencies));
+        if ( r2_flag )
+            printf("r2:\t%lf\t", R2(unic_frequencies, pi, nsam, segsites));
         puts("");
 
         /* see if there's another replicate coming, check the number of samples
@@ -612,6 +630,8 @@ int main(int argc, char *argv[]) {
                 list = create_list(nextsam,nextsites+1);
                 /* hap_frequencies needs to be expanded as well */
                 hap_frequencies = (int *)realloc( hap_frequencies, nextsam*sizeof( int ));
+                /* expand unic_frequencies as well */
+                unic_frequencies = (int *)realloc( unic_frequencies, nextsam*sizeof( int ));
             }
             if ( nextsites > segsites ) {
                 /* first, we'll need a bigger line buffer */
