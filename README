@@ -1,0 +1,9 @@
+Notes for sample_stats2
+=======================
+
+Created sample_stats2.c from my prior changes to the original sample_stats.c; Decided to fork the program to maintain the integrity of the original.
+
+sample_stats2 works identically to the original sample_stats in it's default invocation.
+
+sample_stats2 differs from the original sample_stats in that:
+  - it does not accept an initial integer argument N to count segregating sites in the first N sequences 
