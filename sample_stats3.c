@@ -93,16 +93,16 @@ void biggerlist(int nsam, unsigned nmax, char** list ) {
  * that 0 -> 'A', 1 -> 'G', 2 -> 'C', 3 -> 'T'.
  *
  *      nsam        - total number of samples in data list
- *      nsites      - total number of positions
+ *      segsites    - total number of positions
  *      list        - the data ( samples by positions matrix of chars )
  *      site_freqs  - 2D matrix with enough rows for each site and 4 int columns
  * 
  * Returns nothing (updates the passed-by-references site_frequencies 
  */
-void calculate_site_frequencies( int nsam, int nsites, char **list, int **site_freqs ) {
+void calculate_site_frequencies( int nsam, int segsites, char **list, int **site_freqs ) {
     int     i;                  /* iterator */
 
-    for (i=0; i<nsites; i++) {
+    for (i=0; i<segsites; i++) {
         site_freqs[i][0] = frequency( 'A', i, nsam, list );
         site_freqs[i][1] = frequency( 'G', i, nsam, list );
         site_freqs[i][2] = frequency( 'C', i, nsam, list );
@@ -113,13 +113,13 @@ void calculate_site_frequencies( int nsam, int nsites, char **list, int **site_f
 /*  Calculate the number of segregating sites
  *
  *      nsam            - total number of samples
- *      nsites          - total number of sites 
+ *      segsites          - total number of sites 
  *                        ( length of data in site_freqs array )
  *      site_freqs      - array with nucleotide counts per site 
  *
  *  Returns an integer
  */
-int num_segregating_sites( int nsam, int nsites, int **site_freqs ) {
+int num_segregating_sites( int nsam, int segsites, int **site_freqs ) {
     int     i,j,                /* iterators */
             addone,             /* flag to say if we should increment the count */
             count;              /* running count of segregating sites */
@@ -129,7 +129,7 @@ int num_segregating_sites( int nsam, int nsites, int **site_freqs ) {
     /* run through site_freqs, upping the segregating site count every
      * time we find a site where one of the individual nucleotide counts
      * is neither 0 nor the max (which means there must be variation!) */
-    for (i=0; i<nsites; i++) {
+    for (i=0; i<segsites; i++) {
         addone = 0;
         for (j=0; j<4; j++) {
             if ( site_freqs[i][j] != 0 && site_freqs[i][j] != nsam ) {
@@ -153,7 +153,7 @@ int num_segregating_sites( int nsam, int nsites, int **site_freqs ) {
  *
  *  Returns a double 
  */
-double theta_pi( int nsam, int nsites, int **site_freqs) {
+double theta_pi( int nsam, int segsites, int **site_freqs) {
     int     s,j;                /* iterators */
     double  pi,                 /* what we are calculating */
             ssh,                /* sum of site homozygosity */
@@ -166,7 +166,7 @@ double theta_pi( int nsam, int nsites, int **site_freqs) {
     nd = nsam;
     denom = nd * (nd - 1.0);
 
-    for( s = 0; s < nsites; s++) {
+    for( s = 0; s < segsites; s++) {
         ssh = 0.0;
         for (j=0; j<4; j++) {
             ssh += (site_freqs[s][j] * ( site_freqs[s][j] - 1.0 )) / denom;
@@ -186,7 +186,7 @@ double theta_pi( int nsam, int nsites, int **site_freqs) {
  *
  *  Returns a double with the calculated value
  */
-double theta_w( int nsam, int nsites, int segsites, int **site_freqs) {
+double theta_w( int nsam, int segsites, int **site_freqs) {
     int     s;                  /* iterator */
     double  dsegsites,          /* segregating sites as double */
             denom;              /* denominator of Watterson's theta */
@@ -211,7 +211,7 @@ double theta_w( int nsam, int nsites, int segsites, int **site_freqs) {
  *
  *  Returns nothing (fills in the array given)
  */
-void count_haplotype_frequencies( int nsam, int nsites, char **list, int *hap_freqs ) {
+void count_haplotype_frequencies( int nsam, int segsites, char **list, int *hap_freqs ) {
     int     i, j;               /* iterators */
 
     /* first initialize all haplotype counts to 0 */
@@ -307,13 +307,13 @@ int num_singletons(int nsam, int* hap_freqs) {
  *
  *  Returns an integer
  */
-int num_singleton_sites(int nsites, int **site_freqs) {
+int num_singleton_sites(int segsites, int **site_freqs) {
     int     i,j,                /* iterators */
             count;              /* running total */
 
     count = 0;
 
-    for( i = 0; i < nsites; i++) {
+    for( i = 0; i < segsites; i++) {
         /* calculate site frequency of '1' */
         for( j = 0; j < 4; j++ ) {
             if (site_freqs[i][j] == 1) {
@@ -410,7 +410,7 @@ int main(int argc, char *argv[]) {
     int     i,                  /* iterator */
             maxline,            /* size of the line buffer */
             nsam,               /* number of samples in the dataset */
-            nsites,             /* number of sites in the dataset */
+            segsites,           /* number of segregating sites in the dataset */
             nextsam,            /* number of samples in the next replicate */
             nextsites,          /* number of sites in the next replicate */
             intbuf,             /* integer buffer used for input processing */
@@ -423,8 +423,6 @@ int main(int argc, char *argv[]) {
             *line;              /* temporary string to hold each line as it gets
                                  *   pulled from stdin */
     
-    int     segsites;           /* number of segregating sites */
-
     double  pi;                 /* nucleotide diversity */
     
     int     **site_frequencies, /* Array holding the nucleotide counts per site. 
@@ -524,30 +522,30 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
 
     /* first line should be phylip-style " NSAM NSITES", so pull that data out */
-    sscanf(smallbuf, "%d %d", &nsam, &nsites);
-    /* make sure our nsam and nsites variables are at least greater than zero */
-    if ( nsam <= 0 || nsites <= 0 )
+    sscanf(smallbuf, "%d %d", &nsam, &segsites);
+    /* make sure our nsam and segsites variables are at least greater than zero */
+    if ( nsam <= 0 || segsites <= 0 )
         exit(EXIT_FAILURE);
 
     /* initialize the two dimensional char matrix <list> that will hold our data */
-    list = create_list(nsam,nsites+1);
+    list = create_list(nsam,segsites+1);
 
-    maxline = nsites + 100;
+    maxline = segsites + 100;
 
     /* initialize the line buffer */
     line = (char *)malloc( (maxline+1)*sizeof( char ) );
 
     /* allocate enough space for the number of sites in the data */
-    site_frequencies = (int **)malloc( nsites*sizeof( int* ));
+    site_frequencies = (int **)malloc( segsites*sizeof( int* ));
     /* initialize each site array */
-    for (i=0; i<nsites; i++)
+    for (i=0; i<segsites; i++)
         site_frequencies[i] = (int *)malloc( (4*sizeof( int )));
 
     /* allocate enough space for the number of samples in the data */
     hap_frequencies = (int *)malloc( nsam*sizeof( int ));
 
     /* repeat while we still find data (see the end of the loop) */
-    while( nsam > 0 && nsites > 0 ) {
+    while( nsam > 0 && segsites > 0 ) {
         
         /* for the number of samples, read in each line, first
          * pulling off the sample identifier (which is important
@@ -565,16 +563,16 @@ int main(int argc, char *argv[]) {
         /* only perform calculations we need to */
         
         if ( pi_flag || td_flag || tw_flag || ss_flag || nss_flag ) 
-            calculate_site_frequencies( nsam, nsites, list, site_frequencies );
+            calculate_site_frequencies( nsam, segsites, list, site_frequencies );
 
         if (nh_flag || ns_flag || ho_flag) 
-            count_haplotype_frequencies(nsam, nsites, list, hap_frequencies);
+            count_haplotype_frequencies(nsam, segsites, list, hap_frequencies);
         
         if ( pi_flag || td_flag ) 
-            pi = theta_pi( nsam, nsites, site_frequencies );
+            pi = theta_pi( nsam, segsites, site_frequencies );
 
         if ( ss_flag || tw_flag ) 
-            segsites = num_segregating_sites( nsam, nsites, site_frequencies );
+            segsites = num_segregating_sites( nsam, segsites, site_frequencies );
         
         if ( pi_flag )
             printf("pi:\t%lf\t", pi);
@@ -583,7 +581,7 @@ int main(int argc, char *argv[]) {
         if ( td_flag )
             printf("D:\t%lf\t", tajd(nsam,segsites,pi));
         if ( tw_flag )
-            printf("thetaW:\t%lf\t", theta_w(nsam, nsites, segsites, site_frequencies));
+            printf("thetaW:\t%lf\t", theta_w(nsam, segsites, site_frequencies));
         if ( nh_flag )
             printf("num_haplotypes:\t%d\t", num_haplotypes(nsam, hap_frequencies));
         if ( ns_flag )
@@ -591,7 +589,7 @@ int main(int argc, char *argv[]) {
         if ( ho_flag )
             printf("homozygosity:\t%lf\t", homozygosity(nsam, hap_frequencies));
         if ( nss_flag )
-            printf("nss:\t%d\t", num_singleton_sites(nsites, site_frequencies));
+            printf("nss:\t%d\t", num_singleton_sites(segsites, site_frequencies));
         puts("");
 
         /* see if there's another replicate coming, check the number of samples
@@ -615,7 +613,7 @@ int main(int argc, char *argv[]) {
                 /* hap_frequencies needs to be expanded as well */
                 hap_frequencies = (int *)realloc( hap_frequencies, nextsam*sizeof( int ));
             }
-            if ( nextsites > nsites ) {
+            if ( nextsites > segsites ) {
                 /* first, we'll need a bigger line buffer */
                 maxline = nextsites + 100;
                 line = (char *)realloc( line, (maxline+1)*sizeof( char ));
@@ -623,13 +621,13 @@ int main(int argc, char *argv[]) {
                     perror( "realloc error. couldn't make line bigger");
 
                 /* free up and re-create site_frequencies structure */
-                for (i=0; i<nsites; i++)
+                for (i=0; i<segsites; i++)
                     free( site_frequencies[i] );
                 free(site_frequencies);
                 /* now reallocate enough space for the number of sites in the data */
                 site_frequencies = (int **)malloc( nextsites*sizeof( int* ));
                 /* initialize each site array */
-                for (i=0; i<nsites; i++)
+                for (i=0; i<segsites; i++)
                     site_frequencies[i] = (int *)malloc( (4*sizeof( int )));
                 
                 /* finally, if nextsam is not bigger than the current nsam, 
@@ -637,12 +635,12 @@ int main(int argc, char *argv[]) {
                 biggerlist( nsam, nextsites, list );
             } 
             nsam = nextsam;
-            nsites = nextsites;
+            segsites = nextsites;
         } else {
-            /* we're at the end of the file, zero out nsam or nsites to
+            /* we're at the end of the file, zero out nsam or segsites to
              * kill the while loop that's running this */
             nsam = 0;
-            nsites = 0;
+            segsites = 0;
         }
     }
     
