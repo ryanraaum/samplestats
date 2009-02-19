@@ -610,6 +610,9 @@ int main(int argc, char *argv[]) {
      *  the sum has been calculated and the while test evaluated) */
     while( howmany - count++ ) {
 
+        /* initialize slashline as a simple linefeed */
+        slashline[0] = '\n';
+
         /* read in a sample */
         do {
             /* bail out if there's no data */
@@ -618,7 +621,13 @@ int main(int argc, char *argv[]) {
             }
             /* if this is the "//" line, then push the data into <slashline> */
             if( line[0] == '/' ) {
-                strcpy(slashline,line+3);
+                /* but if there is no data on the line
+                 * just put a linefeed into slashline */
+                if( line[2] == '\n' ) {
+                    slashline[0] == '\n';
+                } else {
+                    strcpy(slashline,line+3);
+                }
             }
             /* otherwise, just read and throw away lines until we get to either a
              * "segsites: <...> " or a "prob: <...> " line */
@@ -733,7 +742,7 @@ int main(int argc, char *argv[]) {
             printf("r2:\t%lf\t", R2(unic_frequencies, pi, nsam, segsites));
         if ( fs_flag )
             printf("Fs:\t%lf\t", Fs(nsam, pi, nh));
-        printf("%s\n", slashline);
+        printf("%s", slashline);
        
     }
     
