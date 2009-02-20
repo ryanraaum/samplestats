@@ -391,7 +391,8 @@ static void print_help (void)
     -n        nh:     number of haplotypes\n\
     -s        ns:     number of singletons\n\
     -N        nss:    number of singleton sites\n\
-    -R        r2:     Ramos-Onsins and Rozas' R2", stdout);
+    -R        r2:     Ramos-Onsins and Rozas' R2\n\
+    -U        Fs:     Fu's Fs\n", stdout);
 
   puts ("");
   fputs ("\
@@ -428,6 +429,7 @@ int main(int argc, char *argv[]) {
             segsites,           /* number of segregating sites in the dataset */
             nextsam,            /* number of samples in the next replicate */
             nextsites,          /* number of sites in the next replicate */
+            nh,                 /* number of haplotypes */
             intbuf,             /* integer buffer used for input processing */
             throwaway;          /* integer buffer used for input processing */
     
@@ -460,7 +462,8 @@ int main(int argc, char *argv[]) {
             nss_flag,           /* 0 or 1; output the number of singleton 
                                  *         sites */
             td_flag,            /* 0 or 1; output Tajima's D */
-            r2_flag;            /* 0 or 1; output Romas-Onsins & Rozas' R2 */
+            r2_flag,            /* 0 or 1; output Romas-Onsins & Rozas' R2 */
+            fs_flag;            /* 0 or 1; output Fu's Fs */
     
     char    ch;                 /* current character iterator for getopt 
                                  *   option parsing */
@@ -482,6 +485,7 @@ int main(int argc, char *argv[]) {
     nss_flag= 0;
     td_flag = 1;
     r2_flag = 0;
+    fs_flag = 0;
 
     /* However, if there are command line options, zero out all flags and
      * print only those specified in the options */
@@ -501,8 +505,9 @@ int main(int argc, char *argv[]) {
      *      s - number of singletons
      *      N - number of singleton sites
      *      R - Ramos-Onsins & Rozas' R2
+     *      U - Fu's Fs
      *      */
-    while ((ch = getopt(argc, argv, "SpWDHnshvNR")) != -1) {
+    while ((ch = getopt(argc, argv, "SpWDHnshvNRU")) != -1) {
         switch (ch) {
 	        case 'S':
 		        ss_flag = 1;
@@ -530,6 +535,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'R':
                 r2_flag = 1;
+                break;
+            case 'U':
+                fs_flag = 1;
                 break;
             case 'h':
                 print_help();
@@ -595,10 +603,10 @@ int main(int argc, char *argv[]) {
 
         /* only perform calculations we need to */
         
-        if (pi_flag || td_flag || tw_flag || ss_flag || nss_flag || r2_flag) 
+        if (pi_flag || td_flag || tw_flag || ss_flag || nss_flag || r2_flag || fs_flag) 
             calculate_site_frequencies(nsam, nsites, list, site_frequencies);
 
-        if (nh_flag || ns_flag || ho_flag) 
+        if (nh_flag || ns_flag || ho_flag || fs_flag) 
             count_haplotype_frequencies(nsam, list, hap_frequencies);
         
         /* fill in the unic_frequencies array if necessary */
@@ -606,11 +614,14 @@ int main(int argc, char *argv[]) {
             count_agct_unic_frequencies(nsam, nsites, list, 
                                         site_frequencies, unic_frequencies);
 
-        if (pi_flag || td_flag || r2_flag) 
+        if (pi_flag || td_flag || r2_flag || fs_flag) 
             pi = theta_pi(nsam, nsites, site_frequencies);
 
         if (ss_flag || tw_flag || td_flag) 
             segsites = num_segregating_sites(nsam, nsites, site_frequencies);
+
+        if (nh_flag || fs_flag)
+            nh = num_haplotypes(nsam, hap_frequencies);
         
         if (pi_flag)
             printf("pi:\t%lf\t", pi);
@@ -621,7 +632,7 @@ int main(int argc, char *argv[]) {
         if (tw_flag)
             printf("thetaW:\t%lf\t", theta_w(nsam, segsites));
         if (nh_flag)
-            printf("num_haplotypes:\t%d\t", num_haplotypes(nsam, hap_frequencies));
+            printf("num_haplotypes:\t%d\t", nh);
         if (ns_flag)
             printf("num_singletons:\t%d\t", num_singletons(nsam, hap_frequencies));
         if (ho_flag)
@@ -630,6 +641,8 @@ int main(int argc, char *argv[]) {
             printf("nss:\t%d\t", num_singleton_sites(nsites, site_frequencies));
         if (r2_flag)
             printf("r2:\t%lf\t", R2(unic_frequencies, pi, nsam, segsites));
+        if (fs_flag)
+            printf("Fs:\t%lf\t", Fs(nsam, pi, nh));
         puts("");
 
         /* see if there's another replicate coming, check the number of samples
