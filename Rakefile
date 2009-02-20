@@ -88,7 +88,7 @@ file SAMPLESTATSPROG2 => ["sample_stats2.o", "tajd.o", "fs.o", "r2.o", "simple_g
   sh "#{LINK} #{LINK_FLAGS}#{t.name} #{t.prerequisites.join(' ')}"
 end
 
-file SAMPLESTATSPROG3 => ["sample_stats3.o", "tajd.o", "r2.o", "simple_getopt.o"] do |t|
+file SAMPLESTATSPROG3 => ["sample_stats3.o", "tajd.o", "fs.o", "r2.o", "simple_getopt.o"] do |t|
   sh "#{LINK} #{LINK_FLAGS}#{t.name} #{t.prerequisites.join(' ')}"
 end
 
@@ -501,13 +501,13 @@ namespace :test do
     assert_passes { val[1] =~ /-?[0-9]+\.[0-9]+/ }
     puts "-R (Ramos-Onsins and Rozas' R2)".ljust(40) + "OK"
 
-   # assert_passes do
-   #   sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -U < onebigseqgen > ss3_out", :verbose => false
-   # end
-   # val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
-   # assert_equal( "Fs:", val[0] )
-   # assert_passes { val[1] =~ /-?[0-9]+\.[0-9]+/ }
-   # puts "-U (Fu's Fs)".ljust(40) + "OK"
+    assert_passes do
+      sh "#{EXEC_PREFIX}#{SAMPLESTATSPROG3} -U < onebigseqgen > ss3_out", :verbose => false
+    end
+    val = (File.open("ss3_out", "r") { |infile| infile.gets }).split(' ')
+    assert_equal( "Fs:", val[0] )
+    assert_passes { val[1] =~ /-?[0-9]+\.[0-9]+/ }
+    puts "-U (Fu's Fs)".ljust(40) + "OK"
 
     puts "SUCCESS."
   end
