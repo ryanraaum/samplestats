@@ -131,12 +131,12 @@ double theta_pi( int nsam, int segsites, int *site_freqs) {
  *
  *      nsam            - total number of samples in data list
  *      segsites        - total number of segregating sites 
- *                        ( length of positions array )
  *      site_freqs      - array with counts of '1' per site 
  *
  *  Returns a double with the calculated value
  */
-double theta_h( int nsam, int segsites, int *site_freqs) {
+double theta_h(int nsam, int segsites, int *site_freqs) 
+{
     int     s;                  /* iterator */
     double  pi,                 /* what we are calculating */
             p1,                 /* site count of derived allele */
@@ -150,12 +150,12 @@ double theta_h( int nsam, int segsites, int *site_freqs) {
 
     nnm1 = nd/(nd-1.0) ;
     
-    for( s = 0; s <segsites; s++) {
+    for (s = 0; s<segsites; s++) {
         p1 = site_freqs[s];
-        pi += p1*p1 ; 
+        pi += p1*p1; 
     }
     
-    return( pi*2.0/(nd*(nd-1.0) ));
+    return pi*2.0/(nd*(nd-1.0));
 }
 
 /*  Calculates Watterson's theta
