@@ -623,7 +623,7 @@ int main(int argc, char *argv[]) {
         if (pi_flag || td_flag || r2_flag || fs_flag) 
             pi = theta_pi(nsam, nsites, site_frequencies);
 
-        if (ss_flag || tw_flag || td_flag) 
+        if (ss_flag || tw_flag || td_flag || r2_flag) 
             segsites = num_segregating_sites(nsam, nsites, site_frequencies);
 
         if (nh_flag || fs_flag)
