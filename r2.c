@@ -83,19 +83,29 @@ void count_agct_unic_frequencies(int nsam, int segsites, char **list, int site_f
     }
 }
 
-/*R2 Ramos & Rozas: "*unic" is the number of singletons in each sequence (in comparison to the sample studied)*/	
-double R2(int *unic, double pi, int sample_size, int S)
+/* Calculate Ramos-Onsins & Rozas' R2
+ *
+ *      pi              - average number of nucleotide differences
+ *      segsites        - number of segregating sites 
+ *      nsam            - number of samples
+ *      unic_freqs      - array with number of unique sites per sample
+ *
+ *  Returns double R2 statistic
+ */
+double R2(int *unic_freqs, double pi, int nsam, int segsites)
 {
     double  sm2;
     int     i;
 
     sm2 = 0.0;
     
-    if(S == 0 || sample_size == 0) return(-10000);
-    for (i=0; i<sample_size; i++)
-        sm2 += ((double)unic[i] - pi/2.0)*((double)unic[i] - pi/2.0);
+    if(segsites == 0 || nsam == 0) 
+        return(-10000);
+
+    for (i=0; i<nsam; i++)
+        sm2 += ((double)unic_freqs[i] - pi/2.0)*((double)unic_freqs[i] - pi/2.0);
     
-    sm2 = sqrt(sm2/((double)sample_size))/(double)S;
+    sm2 = sqrt(sm2/((double)nsam))/(double)segsites;
             
     if (sm2 < 1.0E-15)
         sm2 = 0.0;
