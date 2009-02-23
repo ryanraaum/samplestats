@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+/* Derived from Ramos-Onsins & Rozas' mlcoalsim */
+
 /*  Count up the per sample unique site frequencies in the data;
  *    That is, how many sites are unique to each sequence.
  *
@@ -51,7 +53,7 @@ void count_binary_unic_frequencies(int nsam, int segsites, char **list, int *sit
  *
  *  Returns nothing (fills in the array given)
  */
-void count_agct_unic_frequencies(int nsam, int segsites, char **list, int site_freqs[][4], int *unic_freqs) 
+void count_agct_unic_frequencies(int nsam, int segsites, char **list, int **site_freqs, int *unic_freqs) 
 {
     int     i, j, k;               /* iterators */
     char    *agct;
