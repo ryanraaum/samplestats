@@ -318,17 +318,23 @@ int num_singletons(int nsam, int* hap_freqs)
 int num_singleton_sites(int nsites, int **site_freqs) 
 {
     int     i,j,                /* iterators */
+            num_ones,           /* how many sites have a frequency of 1 */
+            num_gt_zero,        /* how many sites have a frequency > 0 */
             count;              /* running total */
 
     count = 0;
 
     for (i=0; i<nsites; i++) {
-        /* calculate site frequency of '1' */
+        num_ones = 0;
+        num_gt_zero = 0;
         for (j=0; j<4; j++) {
-            if (site_freqs[i][j] == 1) {
-                count++;
-            }
+            if (site_freqs[i][j] == 1)
+                num_ones++;
+            if (site_freqs[i][j] > 0)
+                num_gt_zero++;
         }
+        if (num_ones == 1 && num_gt_zero == 2)
+          count++;
     }
     
     return count;
