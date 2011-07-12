@@ -595,16 +595,11 @@ int main(int argc, char *argv[]) {
     while (nsam > 0 && nsites > 0) {
         
         /* for the number of samples, read in each line, first
-         * pulling off the sample identifier (which is important
-         * because we want to be able to match up with groups from
-         * ms), then pulling the sequence and putting it in the
-         * data list indexed by identifier - 1 (to work with C-style
-         * zero-based indexing). */
+         * pulling off the sample identifier. */
         for (i=0; i<nsam; i++) {
             if (fgets(line, maxline, stdin) == NULL)
                 exit(EXIT_FAILURE);
-            sscanf(line, "%d", &intbuf);
-            sscanf(line, "%d %s", &throwaway, list[intbuf-1]);
+            sscanf(line, "%s %s", smallbuf, list[i]);
         }
 
         /* only perform calculations we need to */
