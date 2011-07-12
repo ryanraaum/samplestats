@@ -12,3 +12,4 @@ extern int opterr;
 int getopt(int argc, char *argv[], char *optstring);
 
 #endif //SIMPLE_GETOPT_H
+
